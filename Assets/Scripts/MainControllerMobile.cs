@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+//using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -22,6 +23,9 @@ public class MainControllerMobile : MonoBehaviour
         else
             lightData.text = "NO";
 
+        if (AttitudeSensor.current != null)
+            InputSystem.EnableDevice(AttitudeSensor.current);
+
         virtualPiano.OnNoteOn += OnNoteOn;
         virtualPiano.OnNoteOff += OnNoteOff;
 
@@ -39,6 +43,8 @@ public class MainControllerMobile : MonoBehaviour
         }
         if (LightSensor.current != null)
             InputSystem.DisableDevice(LightSensor.current);
+        if(AttitudeSensor.current != null)
+            InputSystem.DisableDevice(AttitudeSensor.current);
     }
 
     private void Update() {
@@ -50,11 +56,19 @@ public class MainControllerMobile : MonoBehaviour
             message.values.Add(light_);
             osc.Send(message);
         }
-
+        if (AttitudeSensor.current != null) {
+            var eulerAngles = AttitudeSensor.current.attitude.ReadValue().eulerAngles;
+            var message = new OscMessage();
+            message.address = "/attitude";
+            message.values.Add(eulerAngles.x);
+            message.values.Add(eulerAngles.y);
+            message.values.Add(eulerAngles.z);
+            osc.Send(message);
+        }
     }
 
     private void Start() {
-        CalibrateLightSensor();
+        CalibrateALLsensors();
     }
 
     private void OnNoteOn(int note, int velocity) {
@@ -73,6 +87,11 @@ public class MainControllerMobile : MonoBehaviour
         osc.Send(message);
     }
 
+    public void CalibrateALLsensors() {
+        CalibrateLightSensor();
+        CalibrateAttitudeSensor();
+    }
+
     public void CalibrateLightSensor() {
         if (LightSensor.current != null) {
             if (!LightSensor.current.enabled)
@@ -81,6 +100,20 @@ public class MainControllerMobile : MonoBehaviour
             var message = new OscMessage();
             message.address = "/maxlight";
             message.values.Add(maxLightValue_);
+            osc.Send(message);
+        }
+    }
+
+    public void CalibrateAttitudeSensor() {
+        if (AttitudeSensor.current != null) {
+            if (!AttitudeSensor.current.enabled)
+                InputSystem.EnableDevice(AttitudeSensor.current);
+            var eulerAngles = AttitudeSensor.current.attitude.ReadValue().eulerAngles;
+            var message = new OscMessage();
+            message.address = "/refattitude";
+            message.values.Add(eulerAngles.x);
+            message.values.Add(eulerAngles.y);
+            message.values.Add(eulerAngles.z);
             osc.Send(message);
         }
     }
