@@ -428,8 +428,16 @@ public class UDPPacketIO
 
 
     void Awake() {
-		//print("Opening OSC listener on port " + inPort);
-        //if(takeIP_fromController)
+        //print("Opening OSC listener on port " + inPort);
+        if (takeIP_fromController) {
+            if (PlayerPrefs.HasKey("ip")) {
+                outIP = PlayerPrefs.GetString("ip");
+                MainControllerMobile.IpAdress = outIP;
+            } else {
+                outIP = MainControllerMobile.IpAdress;
+            }
+        }
+            
 		OscPacketIO = new UDPPacketIO(outIP, outPort, inPort);
 		AddressTable = new Hashtable();
 

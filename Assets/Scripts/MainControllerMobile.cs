@@ -9,7 +9,7 @@ public class MainControllerMobile : MonoBehaviour
 {
     [Header("OSC")]
     public OSC osc;
-    public Text ipAddress;
+    public InputField ipAddress;
 
     [Header("Sensors")]
     public VirtualPianoController virtualPiano;
@@ -24,6 +24,12 @@ public class MainControllerMobile : MonoBehaviour
 
         virtualPiano.OnNoteOn += OnNoteOn;
         virtualPiano.OnNoteOff += OnNoteOff;
+
+        if (PlayerPrefs.HasKey("ip")) {
+            MainControllerMobile.IpAdress = ipAddress.text = PlayerPrefs.GetString("ip");
+        } else {
+            ipAddress.text = MainControllerMobile.IpAdress;
+        }
     }
 
     private void OnDestroy() {
@@ -82,6 +88,7 @@ public class MainControllerMobile : MonoBehaviour
     public static string IpAdress = "127.0.0.1";
     public void SetIpAdressAndRestart() {
         IpAdress = ipAddress.text.Trim();
+        PlayerPrefs.SetString("ip", IpAdress);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
