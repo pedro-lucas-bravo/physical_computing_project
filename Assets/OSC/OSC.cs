@@ -392,6 +392,7 @@ public class UDPPacketIO
 
     public int inPort  = 6969;
     public string outIP = "127.0.0.1";
+    public bool takeIP_fromController;
     public int outPort  = 6161;
 
       private UDPPacketIO OscPacketIO;
@@ -428,7 +429,7 @@ public class UDPPacketIO
 
     void Awake() {
 		//print("Opening OSC listener on port " + inPort);
-
+        //if(takeIP_fromController)
 		OscPacketIO = new UDPPacketIO(outIP, outPort, inPort);
 		AddressTable = new Hashtable();
 
