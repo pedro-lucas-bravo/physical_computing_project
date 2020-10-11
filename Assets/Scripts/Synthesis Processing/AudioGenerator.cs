@@ -7,6 +7,7 @@ public class AudioGenerator : SynthModule {
     public AudioSource soundOuput;
     public float frequency = 440;
     public float gain = 0.05f;
+    public float pan = 0;
 
     private ulong position;
 
@@ -51,8 +52,9 @@ public class AudioGenerator : SynthModule {
         module.PreCalculate();
         for (var i = 0; i < data.Length; i = i + channels)
         {
-            sample = data[i] = gain * module.Calculate(position);  
-            if (channels == 2) data[i + 1] = data[i];
+            sample = gain * module.Calculate(position);
+            data[i] = sample * Mathf.Lerp(1, 0, Mathf.Clamp(pan, 0, 1));  
+            if (channels == 2) data[i + 1] = sample * Mathf.InverseLerp(-1, 0, Mathf.Clamp(pan, -1, 0));
             position++;
         }
     }

@@ -7,18 +7,20 @@ using UnityEngine.UI;
 public class MainController : MonoBehaviour
 {
     public OSC osc;
-    public AudioGenerator audioGenerator;
+    public MidiRecorder midiRecorder;
     public SynthModule[] synthChain;
+    public SynthModule[] synthChain2;
 
     [Header("Audio Balance")]
     public AnimationCurve pitchCurve;
     public float minPitchVariation = 0;
     public float maxPitchVariation = 1;
-    public float attitudeVariation = 0.25f;
+    public Vector3 attitudeVariation = 0.25f * Vector3.one;
+    public float percussionPitchVariation = 0.35f;
 
     [Header("Audio Sources")]
 
-    public AudioSource[] sources;
+    public AudioSource[] percusionSources;
 
     private void Awake() {
         Screen.sleepTimeout = SleepTimeout.NeverSleep;     
@@ -28,9 +30,11 @@ public class MainController : MonoBehaviour
     }
 
     private void Update() {
+        var audioGenerator = synthChain[0] as AudioGenerator;
         audioGenerator.soundOuput.pitch = Mathf.Lerp(minPitchVariation, maxPitchVariation, pitchCurve.Evaluate(Mathf.Clamp(light_, 0, maxLightValue_ + 1 ) / (maxLightValue_ + 1)));
         var attFactor = CalculateAttitudeFactor();
-        sources[0].panStereo = Mathf.Lerp(-1, 1, Mathf.Clamp01((attFactor.x - 1 + attitudeVariation)/(2 * attitudeVariation)));
+        audioGenerator.pan = Mathf.Lerp(-1, 1, Mathf.Clamp01((attFactor.x - 1 + attitudeVariation.x)/(2 * attitudeVariation.x)));
+        UpdatePercussionSources(attFactor);
     }
 
     Func<float, float> funcCorrection = deg => deg > 360 ? deg - 360 : (deg < 0 ? deg + 360 : deg);
@@ -39,6 +43,12 @@ public class MainController : MonoBehaviour
         var val = attitudeValue_ + compensation;
         val = new Vector3(funcCorrection(val.x), funcCorrection(val.y), funcCorrection(val.z));        
         return val / 180f;
+    }
+
+    void UpdatePercussionSources(Vector3 attFactor) {
+        for (int i = 0; i < percusionSources.Length; i++) {
+            percusionSources[i].pitch = 1 + Mathf.Lerp(-percussionPitchVariation, percussionPitchVariation, Mathf.Clamp01((attFactor.z - 1 + attitudeVariation.z) / (2 * attitudeVariation.z)));
+        }
     }
 
     private void Start() {
@@ -51,10 +61,15 @@ public class MainController : MonoBehaviour
         osc.SetAddressHandler("/attitude", OnReceiveAttitude);
         osc.SetAddressHandler("/refattitude", OnReceiveRefAttitude);
 
-        for (int i = synthChain.Length - 1; i >= 1; i--) {
-            synthChain[i].SetSourceModule(synthChain[i - 1]);
+        osc.SetAddressHandler("/record", OnReceiveRecord);
+
+        for (int i = 0; i < synthChain.Length - 1; i++) {
+            synthChain[i].SetSourceModule(synthChain[i + 1]);
         }
-        audioGenerator.SetSourceModule(synthChain[synthChain.Length - 1]);
+    }
+
+    private void OnReceiveRecord(OscMessage oscM) {
+        midiRecorder.StartRecording(oscM.GetInt(0) == 1);
     }
 
     private void OnReceiveRefAttitude(OscMessage oscM) {
@@ -77,7 +92,7 @@ public class MainController : MonoBehaviour
         var note = message.GetInt(0);
         var velocity = message.GetInt(1);
 
-        MIDI.MidiManager.OnNoteOff?.Invoke(note, velocity);
+        MIDI.MidiManager.Instance.NoteOff(note, velocity);
     }
 
     #region OSC Msgs
@@ -86,7 +101,7 @@ public class MainController : MonoBehaviour
         var note = message.GetInt(0);
         var velocity = message.GetInt(1);
 
-        MIDI.MidiManager.OnNoteOn?.Invoke(note, velocity);
+        MIDI.MidiManager.Instance.NoteOn(note, velocity);
     }
 
     #endregion

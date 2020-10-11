@@ -92,6 +92,7 @@ public class ADSROperator : SynthModule, IParametersModule {
         float lastVelocityFactor_;
     }
 
+    public MidiListener midiListener;
     public float attack;
     public float decay;
     public float sustain;
@@ -104,8 +105,8 @@ public class ADSROperator : SynthModule, IParametersModule {
     void Awake() {
         MaxInputs = 1;
         sample_rate_ = AudioSettings.outputSampleRate;
-        MIDI.MidiManager.OnNoteOn += OnNoteOn;
-        MIDI.MidiManager.OnNoteOff += OnNoteOff;
+        midiListener.OnNoteOn += OnNoteOn;
+        midiListener.OnNoteOff += OnNoteOff;
         //amp_ = 0;
         midi_indexes_ = new int[128];
         synth_infos_midi = new SynthInfo[128];
@@ -134,9 +135,9 @@ public class ADSROperator : SynthModule, IParametersModule {
     }
 
     private void OnDestroy() {
-        if (MIDI.MidiManager.Instance != null) {
-            MIDI.MidiManager.OnNoteOn -= OnNoteOn;
-            MIDI.MidiManager.OnNoteOff -= OnNoteOff;
+        if (midiListener != null) {
+            midiListener.OnNoteOn -= OnNoteOn;
+            midiListener.OnNoteOff -= OnNoteOff;
         }
     }
 

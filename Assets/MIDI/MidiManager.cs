@@ -21,199 +21,218 @@ namespace MIDI {
 
         public static MidiManager Instance;
 
-        public static Action<int, int> OnNoteOn;
-        public static Action<int, int> OnNoteOff;
+        public MidiListener[] midiListeners;
+        //public static Action<int, int> OnNoteOn;
+        //public static Action<int, int> OnNoteOff;
 
-//#if UNITY_STANDALONE || UNITY_EDITOR
-//        public class MidiInInfo {            
-//            public NAudio.Midi.MidiIn inputDevice;             
-//            public int index;           
-//        }
+        private void Awake() {
+            Instance = this;
+        }
 
-//        List<MidiInInfo> midiInputDevices;
-//#endif
+        public void NoteOn(int note, int velocity) {
+            for (int i = 0; i < midiListeners.Length; i++) {
+                if(!midiListeners[i].isLockedForManager)
+                    midiListeners[i].OnNoteOn?.Invoke(note, velocity);
+            }
+        }
 
+        public void NoteOff(int note, int velocity) {
+            for (int i = 0; i < midiListeners.Length; i++) {
+                if (!midiListeners[i].isLockedForManager)
+                    midiListeners[i].OnNoteOff?.Invoke(note, velocity);
+            }
+        }
 
-//        #region Initialization Methods
+        //#if UNITY_STANDALONE || UNITY_EDITOR
+        //        public class MidiInInfo {            
+        //            public NAudio.Midi.MidiIn inputDevice;             
+        //            public int index;           
+        //        }
 
-//        public void Awake() {
-//            Instance = this;
-            
-//#if UNITY_STANDALONE || UNITY_EDITOR
-//            Resources.UnloadUnusedAssets();
-//            GC.Collect();            
-
-//            midiInputDevices = new List<MidiInInfo>();
-//            for (int i = 0; i < MidiIn.NumberOfDevices; ++i) {
-//                var info = new MidiInInfo();
-//                info.index = i;
-//                midiInputDevices.Add(info);
-//            }
-//            midiControlEvent = new EventHandler<MidiInMessageEventArgs>(midiIn_MessageReceived);
-//#endif
-//#if UNITY_ANDROID && !UNITY_EDITOR
-//            SetupAndroid();
-//#endif
-//        }
+        //        List<MidiInInfo> midiInputDevices;
+        //#endif
 
 
-//        #endregion
+        //        #region Initialization Methods
 
-//#if UNITY_STANDALONE || UNITY_EDITOR
+        //        public void Awake() {
+        //            Instance = this;
 
-//        #region Finalization Methods
+        //#if UNITY_STANDALONE || UNITY_EDITOR
+        //            Resources.UnloadUnusedAssets();
+        //            GC.Collect();            
 
-//        public void Finish() {
-//            for (int i = 0; i < midiInputDevices.Count; i++) {
-//                var midiInputDevice = midiInputDevices[i].inputDevice;
-//                if (midiInputDevice != null /*&& midiInputDevices[i].active*/) {
-//#pragma warning disable
-//                    try {
-//                        midiInputDevice.Stop();
-//                        midiInputDevice.Close();
-//                        midiInputDevice.MessageReceived -= midiControlEvent;
-//                    } catch (Exception e) {
-//                    }
-//#pragma warning restore
-//                }
-//            }
-//            midiInputDevices.Clear();
-//            Resources.UnloadUnusedAssets();
-//            GC.Collect();
-//        }
+        //            midiInputDevices = new List<MidiInInfo>();
+        //            for (int i = 0; i < MidiIn.NumberOfDevices; ++i) {
+        //                var info = new MidiInInfo();
+        //                info.index = i;
+        //                midiInputDevices.Add(info);
+        //            }
+        //            midiControlEvent = new EventHandler<MidiInMessageEventArgs>(midiIn_MessageReceived);
+        //#endif
+        //#if UNITY_ANDROID && !UNITY_EDITOR
+        //            SetupAndroid();
+        //#endif
+        //        }
 
-//#endregion
 
-//#region Real-Time checking Methods
+        //        #endregion
 
-//        private void Update() {
-//            CheckDevices();
-//            CheckForNullDevices();
-//        }
+        //#if UNITY_STANDALONE || UNITY_EDITOR
 
-//        public void CheckForNullDevices() {
-//            if (midiControlEvent == null)
-//                midiControlEvent = new EventHandler<MidiInMessageEventArgs>(midiIn_MessageReceived);
-//            for (int i = 0; i < midiInputDevices.Count; ++i) {
-//                if (midiInputDevices[i].inputDevice == null) {
-//#pragma warning disable
-//                    try {//HACK
-//                        midiInputDevices[i].inputDevice.Stop();
-//                        midiInputDevices[i].inputDevice.Close();
-//                        midiInputDevices[i].inputDevice.MessageReceived -= midiControlEvent;
-//                    } catch (Exception e) {
-//                    }
-//#pragma warning restore
-//                    midiInputDevices[i].inputDevice = new MidiIn(i);
-//                    midiInputDevices[i].inputDevice.Start();
-//                    midiInputDevices[i].inputDevice.MessageReceived += midiControlEvent;
-//                }
-//            }
-//        }
+        //        #region Finalization Methods
 
-//        public void CheckDevices() {
-//            if (midiInputDevices.Count != MidiIn.NumberOfDevices) {
-//                RefreshDevices();
-//                return;
-//            }
-////            for (int i = 0; i < midiInputDevices.Count; i++) {
-                
-////                var inputDevice = midiInputDevices[i].inputDevice;
-////                if (midiInputDevices[i].inputDevice != null) {
-////#pragma warning disable
-////                    try {//HACK
-////                        inputDevice.Stop();
-////                        inputDevice.Close();
-////                        inputDevice.MessageReceived -= midiControlEvent;
-////                    } catch (Exception e) {
-////                    }
-////#pragma warning restore
-////                } else {
-////#pragma warning disable
-////                    try {//HACK
-////                        inputDevice.Stop();
-////                        inputDevice.Close();
-////                        inputDevice.MessageReceived -= midiControlEvent;
-////                    } catch (Exception e) {
-////                    }
-////#pragma warning restore
-////                    inputDevice = midiInputDevices[i].inputDevice = new MidiIn(i);
-////                    inputDevice.Start();
-////                    inputDevice.MessageReceived += midiControlEvent;
+        //        public void Finish() {
+        //            for (int i = 0; i < midiInputDevices.Count; i++) {
+        //                var midiInputDevice = midiInputDevices[i].inputDevice;
+        //                if (midiInputDevice != null /*&& midiInputDevices[i].active*/) {
+        //#pragma warning disable
+        //                    try {
+        //                        midiInputDevice.Stop();
+        //                        midiInputDevice.Close();
+        //                        midiInputDevice.MessageReceived -= midiControlEvent;
+        //                    } catch (Exception e) {
+        //                    }
+        //#pragma warning restore
+        //                }
+        //            }
+        //            midiInputDevices.Clear();
+        //            Resources.UnloadUnusedAssets();
+        //            GC.Collect();
+        //        }
 
-////                }
-////                Resources.UnloadUnusedAssets();
-////                GC.Collect();
-                
+        //#endregion
 
-////            }
-//        }
+        //#region Real-Time checking Methods
 
-//#endregion
+        //        private void Update() {
+        //            CheckDevices();
+        //            CheckForNullDevices();
+        //        }
 
-//#region Message Methods
+        //        public void CheckForNullDevices() {
+        //            if (midiControlEvent == null)
+        //                midiControlEvent = new EventHandler<MidiInMessageEventArgs>(midiIn_MessageReceived);
+        //            for (int i = 0; i < midiInputDevices.Count; ++i) {
+        //                if (midiInputDevices[i].inputDevice == null) {
+        //#pragma warning disable
+        //                    try {//HACK
+        //                        midiInputDevices[i].inputDevice.Stop();
+        //                        midiInputDevices[i].inputDevice.Close();
+        //                        midiInputDevices[i].inputDevice.MessageReceived -= midiControlEvent;
+        //                    } catch (Exception e) {
+        //                    }
+        //#pragma warning restore
+        //                    midiInputDevices[i].inputDevice = new MidiIn(i);
+        //                    midiInputDevices[i].inputDevice.Start();
+        //                    midiInputDevices[i].inputDevice.MessageReceived += midiControlEvent;
+        //                }
+        //            }
+        //        }
 
-//        public void midiIn_MessageReceived(object sender, MidiInMessageEventArgs e) {
-//            // Exit if the MidiEvent is null or is the AutoSensing command code  
-//            if (e.MidiEvent != null && e.MidiEvent.CommandCode == MidiCommandCode.AutoSensing) {
-//                return;
-//            }
-//            int device = (sender as MidiIn).DeviceNo;
-//            if (e.MidiEvent.CommandCode == MidiCommandCode.ControlChange) {
-//                ControlChangeEvent cce;
-//                cce = (ControlChangeEvent)e.MidiEvent;
+        //        public void CheckDevices() {
+        //            if (midiInputDevices.Count != MidiIn.NumberOfDevices) {
+        //                RefreshDevices();
+        //                return;
+        //            }
+        ////            for (int i = 0; i < midiInputDevices.Count; i++) {
 
-//                //msgCmdCode = "Control";
-//                //Debug.Log(msgCmdCode + ": " + device + ", " + cce.Controller + ", " + cce.Channel + ", " + MidiIn.DeviceInfo(device).ProductName + ", " + MidiIn.DeviceInfo(device).ProductId + ", " + cce.ControllerValue);
-//            }
+        ////                var inputDevice = midiInputDevices[i].inputDevice;
+        ////                if (midiInputDevices[i].inputDevice != null) {
+        ////#pragma warning disable
+        ////                    try {//HACK
+        ////                        inputDevice.Stop();
+        ////                        inputDevice.Close();
+        ////                        inputDevice.MessageReceived -= midiControlEvent;
+        ////                    } catch (Exception e) {
+        ////                    }
+        ////#pragma warning restore
+        ////                } else {
+        ////#pragma warning disable
+        ////                    try {//HACK
+        ////                        inputDevice.Stop();
+        ////                        inputDevice.Close();
+        ////                        inputDevice.MessageReceived -= midiControlEvent;
+        ////                    } catch (Exception e) {
+        ////                    }
+        ////#pragma warning restore
+        ////                    inputDevice = midiInputDevices[i].inputDevice = new MidiIn(i);
+        ////                    inputDevice.Start();
+        ////                    inputDevice.MessageReceived += midiControlEvent;
 
-//            if (e.MidiEvent.CommandCode == MidiCommandCode.NoteOn || e.MidiEvent.CommandCode == MidiCommandCode.NoteOff) {
-//                NAudio.Midi.NoteEvent cce;
-//                cce = (NAudio.Midi.NoteEvent)e.MidiEvent;
+        ////                }
+        ////                Resources.UnloadUnusedAssets();
+        ////                GC.Collect();
 
-//                if (e.MidiEvent.CommandCode == MidiCommandCode.NoteOn) {
-//                    if (OnNoteOn != null)
-//                        OnNoteOn(cce.NoteNumber, cce.Velocity);                    
-//                }
-//                else {
-//                    if (OnNoteOff != null)
-//                        OnNoteOff(cce.NoteNumber, cce.Velocity);
-//                }
-//            }
 
-            
-//        }
+        ////            }
+        //        }
 
-//#endregion
+        //#endregion
 
-//#region Cleaning Functions
+        //#region Message Methods
 
-//        void RefreshDevices() {
-//            var newMidiInputDevices = new List<MidiInInfo>();
-//            for (int i = 0; i < MidiIn.NumberOfDevices; ++i) {
-//                var newInfo = new MidiInInfo();
-//                newInfo.index = i;
-//                newMidiInputDevices.Add(newInfo);
-//            }
-//            if (midiInputDevices != null)
-//                midiInputDevices.Clear();
-//            midiInputDevices = newMidiInputDevices;
-//            Resources.UnloadUnusedAssets();
-//            GC.Collect();
-//        }
+        //        public void midiIn_MessageReceived(object sender, MidiInMessageEventArgs e) {
+        //            // Exit if the MidiEvent is null or is the AutoSensing command code  
+        //            if (e.MidiEvent != null && e.MidiEvent.CommandCode == MidiCommandCode.AutoSensing) {
+        //                return;
+        //            }
+        //            int device = (sender as MidiIn).DeviceNo;
+        //            if (e.MidiEvent.CommandCode == MidiCommandCode.ControlChange) {
+        //                ControlChangeEvent cce;
+        //                cce = (ControlChangeEvent)e.MidiEvent;
 
-//#endregion
+        //                //msgCmdCode = "Control";
+        //                //Debug.Log(msgCmdCode + ": " + device + ", " + cce.Controller + ", " + cce.Channel + ", " + MidiIn.DeviceInfo(device).ProductName + ", " + MidiIn.DeviceInfo(device).ProductId + ", " + cce.ControllerValue);
+        //            }
 
-//#region Public Methods
+        //            if (e.MidiEvent.CommandCode == MidiCommandCode.NoteOn || e.MidiEvent.CommandCode == MidiCommandCode.NoteOff) {
+        //                NAudio.Midi.NoteEvent cce;
+        //                cce = (NAudio.Midi.NoteEvent)e.MidiEvent;
 
-//#endregion
+        //                if (e.MidiEvent.CommandCode == MidiCommandCode.NoteOn) {
+        //                    if (OnNoteOn != null)
+        //                        OnNoteOn(cce.NoteNumber, cce.Velocity);                    
+        //                }
+        //                else {
+        //                    if (OnNoteOff != null)
+        //                        OnNoteOff(cce.NoteNumber, cce.Velocity);
+        //                }
+        //            }
 
-//#region Private Members
 
-//        EventHandler<MidiInMessageEventArgs> midiControlEvent;
+        //        }
 
-//#endregion
-//#endif
+        //#endregion
+
+        //#region Cleaning Functions
+
+        //        void RefreshDevices() {
+        //            var newMidiInputDevices = new List<MidiInInfo>();
+        //            for (int i = 0; i < MidiIn.NumberOfDevices; ++i) {
+        //                var newInfo = new MidiInInfo();
+        //                newInfo.index = i;
+        //                newMidiInputDevices.Add(newInfo);
+        //            }
+        //            if (midiInputDevices != null)
+        //                midiInputDevices.Clear();
+        //            midiInputDevices = newMidiInputDevices;
+        //            Resources.UnloadUnusedAssets();
+        //            GC.Collect();
+        //        }
+
+        //#endregion
+
+        //#region Public Methods
+
+        //#endregion
+
+        //#region Private Members
+
+        //        EventHandler<MidiInMessageEventArgs> midiControlEvent;
+
+        //#endregion
+        //#endif
         public static float FromMIDItoFREQ(int midiNote) {
             return Mathf.Pow(2, (midiNote - 69) / 12.0f) * 440f;
         }

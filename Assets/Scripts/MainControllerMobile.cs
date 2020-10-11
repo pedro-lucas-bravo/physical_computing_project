@@ -126,4 +126,12 @@ public class MainControllerMobile : MonoBehaviour
     }
 
     float light_;
+
+
+    public void StartRecord(bool start) {
+        var message = new OscMessage();
+        message.address = "/record";
+        message.values.Add(start ? 1 : 0);
+        osc.Send(message);
+    }
 }
