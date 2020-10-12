@@ -7,7 +7,8 @@ using UnityEngine.UI;
 public class MainController : MonoBehaviour
 {
     public OSC osc;
-    public MidiRecorder midiRecorder;
+    public MidiRecorder midiRecorder1;
+    public MidiRecorder midiRecorder2;
     public SynthModule[] synthChain;
     public SynthModule[] synthChain2;
 
@@ -19,14 +20,27 @@ public class MainController : MonoBehaviour
     public float percussionPitchVariation = 0.35f;
 
     [Header("Audio Sources")]
-
+    public OSCEventReceiver oscEventPercusionPlay;
+    public OSCEventReceiver oscEventPercusionTempo;
     public AudioSource[] percusionSources;
-
+    public AudioLowPassFilter lpf;
+    public float minLpf;
+    public float maxLpf;
+    public OSCEventReceiver oscEventSynth1;
+    public OSCEventReceiver oscEventSynth2;
     private void Awake() {
         Screen.sleepTimeout = SleepTimeout.NeverSleep;     
     }
 
     private void OnDestroy() {
+        if(oscEventPercusionPlay != null)
+            oscEventPercusionPlay.OnEventReceived -= OnEventReceivedPercusionPlay;
+        if (oscEventPercusionTempo != null)
+            oscEventPercusionTempo.OnEventReceived -= OnEventReceivedPercusionTempo;
+        if (oscEventSynth1 != null)
+            oscEventSynth1.OnEventReceived -= OnEventReceivedSynth1;
+        if (oscEventSynth2 != null)
+            oscEventSynth2.OnEventReceived -= OnEventReceivedSynth2;
     }
 
     private void Update() {
@@ -46,9 +60,11 @@ public class MainController : MonoBehaviour
     }
 
     void UpdatePercussionSources(Vector3 attFactor) {
-        for (int i = 0; i < percusionSources.Length; i++) {
-            percusionSources[i].pitch = 1 + Mathf.Lerp(-percussionPitchVariation, percussionPitchVariation, Mathf.Clamp01((attFactor.z - 1 + attitudeVariation.z) / (2 * attitudeVariation.z)));
-        }
+        if (!modifyPercussionTempo_) return;
+        //for (int i = 0; i < percusionSources.Length; i++) {
+        //    percusionSources[i].pitch = 1 + Mathf.Lerp(-percussionPitchVariation, percussionPitchVariation, Mathf.Clamp01((attFactor.z - 1 + attitudeVariation.z) / (2 * attitudeVariation.z)));
+        //}
+        lpf.cutoffFrequency = Mathf.Lerp(minLpf, maxLpf, Mathf.Clamp01((attFactor.z - 1 + attitudeVariation.z) / (2 * attitudeVariation.z)));
     }
 
     private void Start() {
@@ -63,13 +79,51 @@ public class MainController : MonoBehaviour
 
         osc.SetAddressHandler("/record", OnReceiveRecord);
 
+        oscEventPercusionPlay.OnEventReceived += OnEventReceivedPercusionPlay;
+        oscEventPercusionTempo.OnEventReceived += OnEventReceivedPercusionTempo;
+
+        oscEventSynth1.OnEventReceived += OnEventReceivedSynth1;
+        oscEventSynth2.OnEventReceived += OnEventReceivedSynth2;
+
         for (int i = 0; i < synthChain.Length - 1; i++) {
             synthChain[i].SetSourceModule(synthChain[i + 1]);
+        }
+
+        for (int i = 0; i < synthChain2.Length - 1; i++) {
+            synthChain2[i].SetSourceModule(synthChain2[i + 1]);
+        }
+    }
+
+    bool synth1_ = true, synth2_;
+    private void OnEventReceivedSynth1(bool obj) {
+        synth1_ = obj;
+        midiRecorder1.midiListener.isLockedForManager = !obj;
+    }
+
+    private void OnEventReceivedSynth2(bool obj) {
+        synth2_ = obj;
+        midiRecorder2.midiListener.isLockedForManager = !obj;
+    }
+
+    bool modifyPercussionTempo_;
+    private void OnEventReceivedPercusionTempo(bool obj) {
+        modifyPercussionTempo_ = obj;
+    }
+
+    private void OnEventReceivedPercusionPlay(bool obj) {
+        for (int i = 0; i < percusionSources.Length; i++) {
+            if(obj)
+                percusionSources[i].Play();
+            else
+                percusionSources[i].Stop();
         }
     }
 
     private void OnReceiveRecord(OscMessage oscM) {
-        midiRecorder.StartRecording(oscM.GetInt(0) == 1);
+        if(synth1_)
+            midiRecorder1.StartRecording(oscM.GetInt(0) == 1);
+        if (synth2_)
+            midiRecorder2.StartRecording(oscM.GetInt(0) == 1);
     }
 
     private void OnReceiveRefAttitude(OscMessage oscM) {
