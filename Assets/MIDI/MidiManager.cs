@@ -22,8 +22,8 @@ namespace MIDI {
         public static MidiManager Instance;
 
         public MidiListener[] midiListeners;
-        //public static Action<int, int> OnNoteOn;
-        //public static Action<int, int> OnNoteOff;
+        public static Action<int, int> OnNoteOn;
+        public static Action<int, int> OnNoteOff;
 
         private void Awake() {
             Instance = this;
@@ -34,6 +34,7 @@ namespace MIDI {
                 if(!midiListeners[i].isLockedForManager)
                     midiListeners[i].OnNoteOn?.Invoke(note, velocity);
             }
+            OnNoteOn?.Invoke(note, velocity);
         }
 
         public void NoteOff(int note, int velocity) {
@@ -41,6 +42,7 @@ namespace MIDI {
                 if (!midiListeners[i].isLockedForManager)
                     midiListeners[i].OnNoteOff?.Invoke(note, velocity);
             }
+            OnNoteOff?.Invoke(note, velocity);
         }
 
         //#if UNITY_STANDALONE || UNITY_EDITOR

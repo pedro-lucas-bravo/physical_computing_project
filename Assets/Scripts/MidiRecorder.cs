@@ -11,6 +11,8 @@ public class MidiRecorder : MonoBehaviour
     public int BPM = 90;
     public int recordingBeatsSpace = 16;
 
+    public Action OnBeat;
+
     private void Awake() {
         midiListener.OnNoteOn += OnNoteOn;
         midiListener.OnNoteOff += OnNoteOff;
@@ -51,11 +53,14 @@ public class MidiRecorder : MonoBehaviour
             } else
                 lastBeat_++;
             globalBeat_++;
-            if (globalBeat_ % 4 == 0 && !lockBaseTime_) {
-                baseDspTime_ = AudioSettings.dspTime;
-                Debug.Log(lastBeat_);
-                if (notesSequence_.Count > 0)
-                    lockBaseTime_ = true; //lock again to play
+            if (globalBeat_ % 4 == 0){
+                if (!lockBaseTime_) {
+                    baseDspTime_ = AudioSettings.dspTime;
+                    Debug.Log(lastBeat_);
+                    if (notesSequence_.Count > 0)
+                        lockBaseTime_ = true; //lock again to play
+                }
+                OnBeat?.Invoke();
             }                     
         }
             

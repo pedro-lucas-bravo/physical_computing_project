@@ -32,6 +32,8 @@ public class MainController : MonoBehaviour
         Screen.sleepTimeout = SleepTimeout.NeverSleep;     
     }
 
+    public Action<Vector3> OnReceivedAttitude;
+
     private void OnDestroy() {
         if(oscEventPercusionPlay != null)
             oscEventPercusionPlay.OnEventReceived -= OnEventReceivedPercusionPlay;
@@ -47,6 +49,7 @@ public class MainController : MonoBehaviour
         var audioGenerator = synthChain[0] as AudioGenerator;
         audioGenerator.soundOuput.pitch = Mathf.Lerp(minPitchVariation, maxPitchVariation, pitchCurve.Evaluate(Mathf.Clamp(light_, 0, maxLightValue_ + 1 ) / (maxLightValue_ + 1)));
         var attFactor = CalculateAttitudeFactor();
+        OnReceivedAttitude?.Invoke(attFactor);
         audioGenerator.pan = Mathf.Lerp(-1, 1, Mathf.Clamp01((attFactor.x - 1 + attitudeVariation.x)/(2 * attitudeVariation.x)));
         UpdatePercussionSources(attFactor);
     }
