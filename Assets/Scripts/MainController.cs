@@ -26,6 +26,7 @@ public class MainController : MonoBehaviour
     public AudioLowPassFilter lpf;
     public float minLpf;
     public float maxLpf;
+    public AudioChorusFilter chorusFilter;
     public OSCEventReceiver oscEventSynth1;
     public OSCEventReceiver oscEventSynth2;
     private void Awake() {
@@ -105,6 +106,8 @@ public class MainController : MonoBehaviour
 
     private void OnEventReceivedSynth2(bool obj) {
         synth2_ = obj;
+        if (obj)
+            chorusFilter.depth = 0.51f;
         midiRecorder2.midiListener.isLockedForManager = !obj;
     }
 
