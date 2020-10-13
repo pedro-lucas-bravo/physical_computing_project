@@ -8,7 +8,7 @@ public class MidiRecorder : MonoBehaviour
     public MidiListener midiListener;
     public AudioSource basePercussionSource;
     public int baseBeatsNumber = 8;
-    public int BPM = 90;
+    //public int BPM = 90;
     public int recordingBeatsSpace = 16;
 
     public Action OnBeat;
@@ -28,9 +28,21 @@ public class MidiRecorder : MonoBehaviour
         RecordInfo(true, note, velocity);
     }
 
+    bool firstRecord_;
     void RecordInfo(bool isOn, int note, int velocity) {
         if (!record_) return;
         lockBaseTime_ = true;
+        if (!firstRecord_) {
+            var barLength = basePercussionSource.clip.length / (0.25f * baseBeatsNumber);
+            var factor = Mathf.Abs((float)(AudioSettings.dspTime - baseDspTime_)) / barLength;
+            if (factor < 0.25) {
+                Debug.Log("After Beat " + factor);
+            } else {
+                Debug.Log("Before Beat " + factor);
+                baseDspTime_ += barLength;
+            }
+            firstRecord_ = true;
+        }
         notesSequence_.Add(new MidiInfo(isOn, AudioSettings.dspTime - baseDspTime_, note, velocity));
     }
 
@@ -44,6 +56,7 @@ public class MidiRecorder : MonoBehaviour
     int referenceBeatSamples_;
     int lastBeat_;
     double baseDspTime_;
+    double previousBaseDspTime_;
     long globalBeat_;
     bool lockBaseTime_;
     private void Update() {
@@ -55,6 +68,7 @@ public class MidiRecorder : MonoBehaviour
             globalBeat_++;
             if (globalBeat_ % 4 == 0){
                 if (!lockBaseTime_) {
+                    previousBaseDspTime_ = baseDspTime_;
                     baseDspTime_ = AudioSettings.dspTime;
                     Debug.Log(lastBeat_);
                     if (notesSequence_.Count > 0)
@@ -91,6 +105,7 @@ public class MidiRecorder : MonoBehaviour
             notesSequence_.Clear();
             lockBaseTime_ = false;
             midiListener.isLockedForManager = false;
+            firstRecord_ = false;
         }
         record_ = start;
         if (!start) {
