@@ -26,6 +26,7 @@ public class VisualsController : MonoBehaviour
     public Vector2 noteBallSpawnRange;
     public float timeToDestroyNotaBall;
     public float lensIntensityLimits;
+    public float angleSkySpeed;
 
 
     //ColorGrading colorGrading;   
@@ -107,5 +108,15 @@ public class VisualsController : MonoBehaviour
         panParticles.transform.position = panPos;
 
         lensDistortion_.intensity.Override(Mathf.Lerp(-lensIntensityLimits, lensIntensityLimits, attZ));
+
+        UpdateSkyboxMaterial();
+    }
+
+    float angleSky_;
+    void UpdateSkyboxMaterial() {
+        angleSky_ += angleSkySpeed * Time.deltaTime;
+        if (angleSky_ >= 360)
+            angleSky_ = 0;
+        RenderSettings.skybox.SetFloat("_Rotation", angleSky_);
     }
 }
