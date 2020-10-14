@@ -34,6 +34,7 @@ public class MainController : MonoBehaviour
     }
 
     public Action<Vector3> OnReceivedAttitude;
+    public Action<float> OnReceivedLight;
 
     private void OnDestroy() {
         if(oscEventPercusionPlay != null)
@@ -48,11 +49,14 @@ public class MainController : MonoBehaviour
 
     private void Update() {
         var audioGenerator = synthChain[0] as AudioGenerator;
-        audioGenerator.soundOuput.pitch = Mathf.Lerp(minPitchVariation, maxPitchVariation, pitchCurve.Evaluate(Mathf.Clamp(light_, 0, maxLightValue_ + 1 ) / (maxLightValue_ + 1)));
-        var attFactor = CalculateAttitudeFactor();
-        OnReceivedAttitude?.Invoke(attFactor);
+        var pitchFromLight = pitchCurve.Evaluate(Mathf.Clamp(light_, 0, maxLightValue_ + 1) / (maxLightValue_ + 1));
+        audioGenerator.soundOuput.pitch = Mathf.Lerp(minPitchVariation, maxPitchVariation, pitchFromLight);
+        var attFactor = CalculateAttitudeFactor();        
         audioGenerator.pan = Mathf.Lerp(-1, 1, Mathf.Clamp01((attFactor.x - 1 + attitudeVariation.x)/(2 * attitudeVariation.x)));
         UpdatePercussionSources(attFactor);
+
+        OnReceivedLight?.Invoke(Mathf.Clamp(light_, 0, maxLightValue_ + 1) / (maxLightValue_ + 1));
+        OnReceivedAttitude?.Invoke(attFactor);
     }
 
     Func<float, float> funcCorrection = deg => deg > 360 ? deg - 360 : (deg < 0 ? deg + 360 : deg);
