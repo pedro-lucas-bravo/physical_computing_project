@@ -22,11 +22,13 @@ public class VisualsController : MonoBehaviour
     public float camAngleFactor;
     public float camRotationSmoothTime;
     public Gradient gradientLightColor;
+    public bool useAlfaOnGradient = true;
+    public bool activatePanParticales = true;
     public float panLimits = 5;
     public Vector2 noteBallSpawnRange;
     public float timeToDestroyNotaBall;
     public float lensIntensityLimits;
-    public float angleSkySpeed;
+    public float angleSkySpeed;    
 
 
     //ColorGrading colorGrading;   
@@ -53,6 +55,9 @@ public class VisualsController : MonoBehaviour
         var color = gradientLightColor.Evaluate(light);
         bloom_.color.Override(color);
         panParticles.startColor = color;
+        var originalCentralObjectColor = centralObjectRender.material.color;
+        if (!useAlfaOnGradient)
+            color.a = originalCentralObjectColor.a;
         centralObjectRender.material.color = color;
     }
 
@@ -105,7 +110,8 @@ public class VisualsController : MonoBehaviour
 
         var panPos = panParticles.transform.position;
         panPos.x = Mathf.Lerp(-panLimits, panLimits, Mathf.Clamp01((attitude_.x - 1 + mainController.attitudeVariation.x) / (2 * mainController.attitudeVariation.x)));
-        panParticles.transform.position = panPos;
+        if(activatePanParticales)
+            panParticles.transform.position = panPos;
 
         lensDistortion_.intensity.Override(Mathf.Lerp(-lensIntensityLimits, lensIntensityLimits, attZ));
 
