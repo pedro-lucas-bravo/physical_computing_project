@@ -87,6 +87,8 @@ public class MainController : MonoBehaviour
 
         osc.SetAddressHandler("/record", OnReceiveRecord);
 
+        osc.SetAddressHandler("/globalspeed", OnReceiveGlobalSpeed);
+
         oscEventPercusionPlay.OnEventReceived += OnEventReceivedPercusionPlay;
         oscEventPercusionTempo.OnEventReceived += OnEventReceivedPercusionTempo;
 
@@ -136,6 +138,10 @@ public class MainController : MonoBehaviour
             midiRecorder2.StartRecording(oscM.GetInt(0) == 1);
     }
 
+    private void OnReceiveGlobalSpeed(OscMessage oscM) {
+        Time.timeScale = oscM.GetFloat(0);
+    }
+
     private void OnReceiveRefAttitude(OscMessage oscM) {
         refAttitudeValue_ = new Vector3(oscM.GetInt(0), oscM.GetInt(1), oscM.GetInt(2));
     }
@@ -149,7 +155,7 @@ public class MainController : MonoBehaviour
     }
 
     private void OnReceiveLight(OscMessage oscM) {
-        light_ = oscM.GetInt(0);
+        light_ = oscM.GetFloat(0);
     }
 
     private void OnReceiveNoteOff(OscMessage message) {
