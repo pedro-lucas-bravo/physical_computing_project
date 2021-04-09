@@ -501,7 +501,7 @@ public class UDPPacketIO
 
 
 		if ( messagesReceived.Count > 0 ) {
-			//Debug.Log("received " + messagesReceived.Count + " messages");
+			Debug.LogWarning("received " + messagesReceived.Count + " messages");
 			lock(ReadThreadLock) {
 				foreach (OscMessage om in messagesReceived)
 				{
