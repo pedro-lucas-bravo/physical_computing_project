@@ -163,7 +163,7 @@ public class UDPPacketIO
 			Debug.Log("Opening OSC listener on port " + localPort);
 			
 			IPEndPoint listenerIp = new IPEndPoint(IPAddress.Any, localPort);
-			Receiver = new UdpClient(listenerIp);
+			Receiver = new UdpClient(localPort);
 			
 			
 			socketsOpen = true;
@@ -501,7 +501,7 @@ public class UDPPacketIO
 
 
 		if ( messagesReceived.Count > 0 ) {
-			Debug.LogWarning("received " + messagesReceived.Count + " messages");
+			//Debug.LogWarning("received " + messagesReceived.Count + " messages");
 			lock(ReadThreadLock) {
 				foreach (OscMessage om in messagesReceived)
 				{

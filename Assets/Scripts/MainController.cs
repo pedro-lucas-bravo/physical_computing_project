@@ -79,7 +79,7 @@ public class MainController : MonoBehaviour
         osc.SetAddressHandler("/noteon", OnReceiveNoteOn);
         osc.SetAddressHandler("/noteoff", OnReceiveNoteOff);
 
-        osc.SetAddressHandler("/accelerometer/x", OnReceiveLight);
+        osc.SetAddressHandler("/light", OnReceiveLight);
         osc.SetAddressHandler("/maxlight", OnReceiveMaxLight);
 
         osc.SetAddressHandler("/attitude", OnReceiveAttitude);

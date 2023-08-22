@@ -108,8 +108,9 @@ public class ADSROperator : SynthModule, IParametersModule {
         midiListener.OnNoteOn += OnNoteOn;
         midiListener.OnNoteOff += OnNoteOff;
         //amp_ = 0;
-        midi_indexes_ = new int[128];
-        synth_infos_midi = new SynthInfo[128];
+        int maxIndex = 200;
+        midi_indexes_ = new int[maxIndex];
+        synth_infos_midi = new SynthInfo[maxIndex];
         for (int i = 0; i < synth_infos_midi.Length; i++) {
             synth_infos_midi[i] = new SynthInfo(this);
         }
